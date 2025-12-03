@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>保羅的旅程 | Paul's Journey</title>
+    <!-- 引入字體與圖示 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* --- 核心設定 (Core Styles) --- */
+        :root {
+            --primary-color: #D4A373; /* 羊皮紙金 */
+            --secondary-color: #FAEDCD; /* 淺米色 */
+            --accent-color: #BC6C25; /* 皮革棕 */
+            --dark-bg: #2C3E50; /* 深夜藍 */
+            --text-main: #333;
+            --text-light: #F4F4F9;
+        }
+
+        * {
+            box-sizing: border-box;
+            user-select: none; /* 禁止選取文字，增加 App 感 */
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 模擬手機容器 */
+        #app-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            background-color: var(--secondary-color);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- UI 元件 (UI Components) --- */
+        .header {
+            padding: 15px;
+            background: var(--accent-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            flex-shrink: 0; 
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-family: 'Noto Serif TC', serif;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #debug-level-id {
+            font-size: 0.7rem;
+            font-family: monospace;
+            background: rgba(0,0,0,0.2);
+            padding: 2px 6px;
+            border-radius: 4px;
+            opacity: 0.9;
+        }
+
+        .inventory-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .inventory-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: red;
+            border-radius: 50%;
+            width: 10px;
+            height: 10px;
+            display: none;
+        }
+
+        /* --- 遊戲場景區域 (Game Scene) --- */
+        #scene-area {
+            flex: 1;
+            position: relative;
+            
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; 
+            align-items: center;
+            
+            text-align: center;
+            padding: 20px 20px 40px 20px; 
+            overflow-y: auto; 
+            overflow-x: hidden;
+        }
+
+        /* 新增：背景容器，包含圖片與漸層 */
+        #scene-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; /* 最底層 */
+            background-color: var(--dark-bg); /* 預設底色 */
+        }
+
+        /* 背景圖片：使用 img 標籤控制 */
+        #bg-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 讓圖片填滿且不變形 */
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0; /* 預設隱藏，載入後顯示 */
+            transition: opacity 0.5s ease, filter 0.1s linear;
+            
+            /* 預設稍微放大，解決模糊白邊問題 */
+            transform: scale(1.1); 
+        }
+
+        /* 背景漸層遮罩：疊在圖片上，讓文字更清楚 */
+        #bg-gradient {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.3), rgba(0,0,0,0.6));
+            pointer-events: none;
+        }
+
+        /* 場景遮罩 (用於閃光特效) */
+        #scene-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            transition: background-color 0.3s, opacity 0.5s;
+            z-index: 1;
+        }
+
+        /* 敘述文字框 */
+        .story-box {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            margin-top: 20px; 
+            max-width: 90%;
+            z-index: 5; /* 確保在背景之上 */
+            transform: translateY(20px);
+            opacity: 0;
+            animation: fadeUp 0.8s forwards;
+            border-left: 5px solid var(--accent-color);
+            position: relative;
+        }
+
+        .story-text {
+            font-family: 'Noto Serif TC', serif;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-main);
+            margin-bottom: 15px;
+        }
+
+        /* 互動按鈕 */
+        .action-btn {
+            background: var(--dark-bg);
+            color: white;
+            border: none;
+            padding: 18px 30px; 
+            font-size: 1.2rem;
+            border-radius: 40px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.1s, background 0.3s;
+            z-index: 5; /* 確保在背景之上 */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+            
+            margin-top: auto; 
+            width: 90%; 
+            max-width: 350px;
+        }
+
+        .action-btn:active {
+            transform: scale(0.98);
+        }
+
+        .action-btn.disabled {
+            background: #ccc;
+            pointer-events: none;
+        }
+
+        /* --- 角色移動與進度顯示 --- */
+        .progress-container {
+            width: 90%;
+            height: 8px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+            margin: 20px 0; 
+            overflow: hidden;
+            display: none; 
+            z-index: 5;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-color);
+            transition: width 0.2s;
+        }
+
+        /* 人物移動軌道 */
+        .avatar-track {
+            width: 95%;
+            height: 60px;
+            position: relative;
+            margin: 20px 0; 
+            display: none;
+            z-index: 5;
+        }
+        
+        .track-line {
+            position: absolute;
+            bottom: 10px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 2px;
+        }
+
+        .track-end-marker {
+            position: absolute;
+            right: 0;
+            bottom: 10px;
+            font-size: 1.5rem;
+            transform: translate(50%, 50%);
+            color: var(--dark-bg);
+        }
+
+        .avatar-icon {
+            position: absolute;
+            bottom: 12px;
+            left: 0%; 
+            font-size: 2.5rem;
+            color: var(--dark-bg);
+            transition: left 0.3s ease-out;
+            transform: translateX(-50%);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .avatar-icon.walking {
+            animation: bounce 0.3s infinite alternate;
+        }
+
+        .tap-feedback {
+            position: absolute;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            pointer-events: none;
+            animation: floatFade 0.8s forwards;
+            z-index: 20;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .prayer-word {
+            position: absolute;
+            color: #FFF;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 1.3rem;
+            pointer-events: none;
+            animation: floatUpSlow 2.5s forwards;
+            z-index: 20;
+            text-shadow: 0 0 10px rgba(255,255,255,0.9);
+            opacity: 0;
+        }
+
+        /* 內在靈性之光 */
+        #inner-light {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0px;
+            height: 0px;
+            background: radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+            opacity: 0;
+            transition: width 0.5s ease-out, height 0.5s ease-out, opacity 0.5s;
+            pointer-events: none;
+            z-index: 2; /* 在背景之上，文字之下 */
+            box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        /* 滑動互動提示 (Hand Hint) - 確保層級夠高 */
+        .hand-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4rem;
+            color: rgba(255, 255, 255, 0.9);
+            pointer-events: none; 
+            z-index: 50; /* 最高層級 */
+            display: none; 
+            text-shadow: 0 0 15px rgba(0,0,0,0.8);
+        }
+
+        .hand-hint.active {
+            display: block;
+            animation: wipe-gesture 2s infinite ease-in-out;
+        }
+
+        @keyframes wipe-gesture {
+            0% { transform: translate(-80%, -50%) rotate(-10deg); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translate(20%, -50%) rotate(10deg); opacity: 0; }
+        }
+
+        .btn-pulse {
+            animation: pulse-glow 2s infinite;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        @keyframes bounce {
+            from { transform: translateX(-50%) translateY(0); }
+            to { transform: translateX(-50%) translateY(-10px); }
+        }
+
+        @keyframes floatFade {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-50px) scale(1.5); }
+        }
+
+        @keyframes floatUpSlow {
+            0% { opacity: 0; transform: translateY(0) scale(0.8); }
+            20% { opacity: 1; transform: translateY(-20px) scale(1); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1.1); }
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px rgba(255,255,255,0.1); }
+            50% { box-shadow: 0 0 20px rgba(255,255,255,0.4); }
+            100% { box-shadow: 0 0 5px rgba(255,255,255,0.1); }
+        }
+
+        .bible-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 5px 15px;
+            background: #e0e0e0;
+            color: #555;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid #ccc;
+        }
+        
+        .bible-link i {
+            margin-right: 5px;
+            color: var(--accent-color);
+        }
+
+        /* --- 模態視窗 --- */
+        .modal {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+
+        .modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .card {
+            background: white;
+            width: 85%;
+            padding: 30px 20px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+        }
+
+        .card h2 {
+            color: var(--accent-color);
+            font-family: 'Noto Serif TC', serif;
+            margin-top: 0;
+        }
+
+        .card-verse {
+            font-style: italic;
+            color: #555;
+            margin: 20px 0;
+            padding: 10px;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+        }
+
+        .card-reflection {
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .next-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 10px 30px;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .shake-anim {
+            animation: shake 0.3s;
+        }
+
+        #inventory-panel {
+            position: absolute;
+            bottom: -100%;
+            left: 0;
+            width: 100%;
+            height: 60%;
+            background: white;
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
+            transition: bottom 0.3s ease;
+            z-index: 50;
+            padding: 20px;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+        }
+
+        #inventory-panel.open {
+            bottom: 0;
+        }
+
+        .inventory-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .inventory-list {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .inventory-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.5; 
+            filter: grayscale(100%);
+        }
+
+        .inventory-item.obtained {
+            opacity: 1;
+            filter: grayscale(0%);
+        }
+
+        .inventory-item i {
+            font-size: 2rem;
+            color: var(--accent-color);
+            margin-bottom: 5px;
+        }
+        
+        .inventory-item span {
+            font-size: 0.8rem;
+        }
+
+        /* --- 特殊場景樣式 --- */
+        .scene-blind {
+            background-color: black !important;
+        }
+        .scene-blur {
+            /* 現在模糊是直接應用在 img 上，所以這裡可以只留空或做其他處理 */
+        }
+
+    </style>
+</head>
+<body>
+
+    <div id="app-container">
+        <!-- 頂部導航 -->
+        <header class="header">
+            <h1>
+                <i class="fa-solid fa-scroll"></i> 保羅的旅程
+                <span id="debug-level-id"></span>
+            </h1>
+            <button class="inventory-btn" onclick="toggleInventory()">
+                <i class="fa-solid fa-briefcase"></i>
+                <span id="badge" class="inventory-badge"></span>
+            </button>
+        </header>
+
+        <!-- 遊戲主場景 -->
+        <main id="scene-area">
+            <!-- 新增：背景容器，包含圖片與漸層 -->
+            <div id="scene-background">
+                <!-- 關鍵修改：加入 referrerpolicy="no-referrer" 解決預覽載入問題 -->
+                <img id="bg-img" src="" alt="scene background" referrerpolicy="no-referrer" onerror="this.style.display='none'">
+                <div id="bg-gradient"></div>
+            </div>
+
+            <div id="scene-overlay"></div>
+            
+            <!-- 內在靈性之光 -->
+            <div id="inner-light"></div>
+
+            <!-- 互動手勢提示 (Hand Hint) -->
+            <div id="interaction-hint" class="hand-hint">
+                <i class="fa-regular fa-hand-pointer"></i>
+            </div>
+
+            <div class="story-box" id="story-box">
+                <div class="story-text" id="story-text">
+                    正在載入故事...
+                </div>
+                <div id="bible-link-container"></div>
+            </div>
+
+            <!-- 人物移動軌道 -->
+            <div class="avatar-track" id="avatar-track">
+                <div class="track-line"></div>
+                <div class="track-end-marker"><i class="fa-solid fa-location-dot"></i></div>
+                <div class="avatar-icon" id="avatar-icon">
+                    <i class="fa-solid fa-person-walking"></i>
+                </div>
+            </div>
+
+            <!-- 進度條 -->
+            <div class="progress-container" id="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+
+            <button class="action-btn" id="action-btn">
+                <span>開始旅程</span>
+            </button>
+        </main>
+
+        <!-- 省思卡片 Modal -->
+        <div class="modal" id="reflection-modal">
+            <div class="card">
+                <h2><i class="fa-solid fa-lightbulb"></i> 每日省思</h2>
+                <div class="card-verse" id="modal-verse"></div>
+                <div class="card-reflection" id="modal-text"></div>
+                <button class="next-btn" id="next-level-btn">繼續旅程</button>
+            </div>
+        </div>
+
+        <!-- 背包面板 -->
+        <div id="inventory-panel">
+            <div class="inventory-header">
+                <h3><i class="fa-solid fa-box-open"></i> 收集物品</h3>
+                <button onclick="toggleInventory()" style="border:none;background:none;font-size:1.2rem;"><i class="fa-solid fa-times"></i></button>
+            </div>
+            <div class="inventory-list" id="inventory-list">
+                <!-- 物品動態生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* --- 1. 資料層 (Data Layer) --- */
+        const getBibleLink = (bookId, chapter, verse) => {
+            return `https://bibletool.konline.org/browse/#UCV:${bookId}:${chapter}:${verse}`;
+        };
+
+        const levels = [
+            {
+                id: "1-1",
+                title: "熱心的掃羅",
+                background: "linear-gradient(to bottom, #87CEEB, #E0F7FA)", 
+                // 更換為：維基百科的公共領域圖片，較穩定
+                bgImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Desert_Road_to_Jericho.jpg/800px-Desert_Road_to_Jericho.jpg",
+                text: "你是掃羅，一個年輕且熱心的法利賽人。你深信這些「基督徒」正在破壞猶太教的傳統。你拿著大祭司的文書，正準備前往大馬士革捉拿他們。",
+                actionType: "tap", 
+                actionText: "點擊趕路",
+                maxProgress: 15, 
+                bibleRef: { text: "使徒行傳 9:1-2", book: 44, chap: 9, v: 1 },
+                nextLevel: "2-1"
+            },
+            {
+                id: "2-1",
+                title: "大光的衝擊",
+                background: "linear-gradient(to bottom, #2C3E50, #000000)", 
+                // 更換為：強烈的光穿透天空
+                bgImage: "https://images.unsplash.com/photo-1495616811223-4d98c6e9d869?q=80&w=800",
+                text: "正當你快到大馬士革時，突然，天上發光，四面照著你！你看不見任何東西，只聽見聲音...",
+                actionType: "flash_tap", 
+                actionText: "誰在說話？",
+                maxProgress: 1, 
+                bibleRef: { text: "使徒行傳 9:3", book: 44, chap: 9, v: 3 },
+                reflection: {
+                    verse: "「掃羅！掃羅！你為什麼逼迫我？」",
+                    text: "有時候，神必須用激烈的方式打斷我們的人生計畫，才能讓我們聽見祂的聲音。",
+                    reward: "light_fragment"
+                },
+                nextLevel: "2-2"
+            },
+            {
+                id: "2-2",
+                title: "黑暗中的等待",
+                background: "#000000", 
+                // 全黑不需要圖片
+                bgImage: null,
+                text: "你的眼睛瞎了，三天不能看見，也不吃也不喝。你在黑暗中獨自面對內心的震盪。",
+                actionType: "pray", 
+                actionText: "在黑暗中禱告...",
+                maxProgress: 15, 
+                bibleRef: { text: "使徒行傳 9:9", book: 44, chap: 9, v: 9 },
+                nextLevel: "2-3"
+            },
+            {
+                id: "2-3",
+                title: "鱗片掉落",
+                background: "linear-gradient(to bottom, #555, #999)", 
+                // 古代石室內，光線從窗戶射入 (模擬重見光明)
+                bgImage: "https://images.unsplash.com/photo-1565022026771-337ccf23cb5a?q=80&w=800",
+                text: "亞拿尼亞順服神的呼召來為你按手。你需要清理眼中的帕子，重新看見。",
+                actionType: "wipe", 
+                actionText: "擦拭螢幕恢復視力",
+                maxProgress: 100,
+                bibleRef: { text: "使徒行傳 9:18", book: 44, chap: 9, v: 18 },
+                reflection: {
+                    verse: "「立即有鱗片從他眼睛上掉下來，他就能看見。」",
+                    text: "真實的看見，往往發生在我們願意放下偏見（鱗片）之後。",
+                    reward: "scroll_acts"
+                },
+                nextLevel: "end" 
+            }
+        ];
+
+        const inventoryItems = {
+            "light_fragment": { name: "大光碎片", icon: "fa-sun" },
+            "scroll_acts": { name: "使徒證書", icon: "fa-scroll" },
+            "letter_romans": { name: "羅馬書", icon: "fa-envelope" }
+        };
+
+        const prayerWords = ["主啊", "我是誰", "為什麼", "憐憫", "光", "悔改", "禱告", "靜默", "赦免"];
+
+        /* --- 2. 遊戲引擎 (Game Engine) --- */
+        let state = {
+            currentLevelId: "1-1",
+            progress: 0,
+            inventory: [],
+            isInteracting: false
+        };
+
+        // DOM 元素快取
+        const els = {
+            scene: document.getElementById('scene-area'),
+            bgContainer: document.getElementById('scene-background'), // 背景容器
+            bgImg: document.getElementById('bg-img'), // 背景圖片標籤
+            overlay: document.getElementById('scene-overlay'),
+            text: document.getElementById('story-text'),
+            storyBox: document.getElementById('story-box'),
+            btn: document.getElementById('action-btn'),
+            progressContainer: document.getElementById('progress-container'),
+            progressBar: document.getElementById('progress-bar'),
+            avatarTrack: document.getElementById('avatar-track'),
+            avatarIcon: document.getElementById('avatar-icon'),
+            innerLight: document.getElementById('inner-light'),
+            hint: document.getElementById('interaction-hint'),
+            bibleLinkContainer: document.getElementById('bible-link-container'),
+            modal: document.getElementById('reflection-modal'),
+            modalVerse: document.getElementById('modal-verse'),
+            modalText: document.getElementById('modal-text'),
+            nextBtn: document.getElementById('next-level-btn'),
+            inventoryList: document.getElementById('inventory-list'),
+            badge: document.getElementById('badge'),
+            debugLevelId: document.getElementById('debug-level-id')
+        };
+
+        // 初始化
+        function init() {
+            const savedLevel = localStorage.getItem('paul_level');
+            const savedInv = JSON.parse(localStorage.getItem('paul_inventory') || '[]');
+            
+            if (savedLevel) state.currentLevelId = savedLevel;
+            state.inventory = savedInv;
+
+            renderInventory();
+            loadLevel(state.currentLevelId);
+        }
+
+        // 載入關卡
+        function loadLevel(levelId) {
+            if (levelId === "end") {
+                renderEndScreen();
+                return;
+            }
+
+            const level = levels.find(l => l.id === levelId);
+            if (!level) {
+                localStorage.removeItem('paul_level');
+                state.currentLevelId = "1-1";
+                location.reload();
+                return;
+            }
+
+            state.currentLevel = level;
+            state.progress = 0;
+            updateProgress(0);
+
+            if (els.debugLevelId) {
+                els.debugLevelId.innerText = levelId;
+            }
+
+            // UI 更新 - 背景設置 (使用 img 標籤 + CSS fallback)
+            
+            // 1. 設定底色 (如果圖片沒載入時顯示)
+            els.bgContainer.style.background = level.background;
+            
+            // 2. 設定圖片
+            if (level.bgImage) {
+                els.bgImg.src = level.bgImage;
+                els.bgImg.style.display = 'block';
+                // 圖片載入時淡入
+                els.bgImg.onload = () => { els.bgImg.style.opacity = '1'; };
+                els.bgImg.onerror = () => { els.bgImg.style.display = 'none'; }; // 載入失敗則隱藏
+            } else {
+                // 如果沒有圖片設定 (例如 2-2 黑暗關卡)
+                els.bgImg.style.display = 'none';
+                els.bgImg.style.opacity = '0';
+                els.bgImg.src = '';
+            }
+            
+            // 重置特效
+            els.bgContainer.classList.remove('scene-blind'); 
+            els.bgImg.style.filter = ''; // 重置動態 filter (給 img)
+            
+            els.overlay.style.backgroundColor = 'transparent';
+            els.innerLight.style.width = '0px'; 
+            els.innerLight.style.height = '0px';
+            els.innerLight.style.opacity = '0';
+            els.hint.classList.remove('active'); 
+            els.avatarTrack.style.display = 'none'; 
+            els.progressContainer.style.display = 'none';
+
+            // 特殊關卡特效
+            if (level.id === "2-2") els.bgContainer.classList.add('scene-blind');
+            if (level.id === "2-3") els.bgImg.style.filter = 'blur(8px)'; // 初始模糊
+
+            els.storyBox.style.display = 'block'; 
+            els.storyBox.style.animation = 'none';
+            els.storyBox.offsetHeight; 
+            els.storyBox.style.animation = 'fadeUp 0.8s forwards';
+            
+            els.text.innerHTML = level.text;
+            els.btn.innerHTML = `<span>${level.actionText}</span>`;
+            els.btn.classList.remove('disabled');
+            els.btn.classList.remove('btn-pulse'); 
+
+            if (level.bibleRef) {
+                const url = getBibleLink(level.bibleRef.book, level.bibleRef.chap, level.bibleRef.v);
+                els.bibleLinkContainer.innerHTML = `
+                    <a href="${url}" target="_blank" class="bible-link">
+                        <i class="fa-solid fa-book-bible"></i> 閱讀: ${level.bibleRef.text}
+                    </a>
+                `;
+            } else {
+                els.bibleLinkContainer.innerHTML = '';
+            }
+
+            setupInteraction(level);
+        }
+
+        function renderEndScreen() {
+            els.bgContainer.style.background = "#2C3E50"; 
+            els.bgImg.style.display = 'none';
+            els.bgContainer.classList.remove('scene-blind'); 
+            
+            els.overlay.style.backgroundColor = 'transparent';
+            els.innerLight.style.opacity = '0';
+            els.hint.classList.remove('active');
+            
+            els.avatarTrack.style.display = 'none';
+            els.progressContainer.style.display = 'none';
+            els.bibleLinkContainer.innerHTML = '';
+            
+            els.text.innerHTML = `
+                <h2 style="color:var(--accent-color); margin-bottom:10px; font-family:'Noto Serif TC', serif;">旅程待續</h2>
+                <p>感謝您體驗《保羅的旅程》Demo。</p>
+                <p>這只是保羅傳奇一生的開始...</p>
+                <p style="font-size:0.9rem; color:#666; margin-top:20px;">(更多關卡開發中)</p>
+            `;
+            
+            const newBtn = els.btn.cloneNode(true);
+            els.btn.parentNode.replaceChild(newBtn, els.btn);
+            els.btn = newBtn;
+            
+            els.btn.innerHTML = '<span><i class="fa-solid fa-rotate-left"></i> 重新開始</span>';
+            els.btn.classList.remove('disabled');
+            els.btn.classList.remove('btn-pulse');
+            
+            els.btn.addEventListener('click', () => {
+                localStorage.removeItem('paul_level');
+                localStorage.removeItem('paul_inventory');
+                state.currentLevelId = "1-1";
+                state.inventory = [];
+                location.reload();
+            });
+            
+            if (els.debugLevelId) els.debugLevelId.innerText = "END";
+        }
+
+        function setupInteraction(level) {
+            const newBtn = els.btn.cloneNode(true);
+            els.btn.parentNode.replaceChild(newBtn, els.btn);
+            els.btn = newBtn;
+
+            if (level.actionType === 'tap') {
+                els.avatarTrack.style.display = 'block';
+                els.btn.addEventListener('click', (e) => {
+                    handleProgress(1);
+                    createTapEffect(e, 'footstep');
+                    els.avatarIcon.classList.add('walking');
+                    clearTimeout(els.walkTimeout);
+                    els.walkTimeout = setTimeout(() => {
+                        els.avatarIcon.classList.remove('walking');
+                    }, 300);
+                });
+            } 
+            else if (level.actionType === 'pray') {
+                els.btn.classList.add('btn-pulse'); 
+                els.btn.addEventListener('click', (e) => {
+                    handleProgress(1);
+                    createTapEffect(e, 'word'); 
+                    
+                    const maxPixels = 300; 
+                    const size = (state.progress / level.maxProgress) * maxPixels;
+                    const opacity = (state.progress / level.maxProgress);
+                    
+                    els.innerLight.style.width = `${size}px`;
+                    els.innerLight.style.height = `${size}px`;
+                    els.innerLight.style.opacity = `${opacity * 0.8}`; 
+                });
+            }
+            else if (level.actionType === 'flash_tap') {
+                els.btn.addEventListener('click', () => {
+                    els.overlay.style.backgroundColor = 'white';
+                    els.overlay.style.opacity = '1';
+                    setTimeout(() => {
+                        handleProgress(1); 
+                    }, 1000);
+                });
+            }
+            else if (level.actionType === 'wipe') {
+                els.progressContainer.style.display = 'block';
+                els.hint.classList.add('active'); 
+
+                els.btn.innerHTML = `<span><i class="fa-solid fa-hand-sparkles"></i> 滑動畫面擦亮眼睛</span>`;
+                
+                const handleMove = () => {
+                    handleProgress(0.8); 
+                    const blurAmount = 8 - (state.progress / level.maxProgress * 8);
+                    
+                    // 修正：現在直接控制 img 標籤的 CSS filter
+                    if (blurAmount < 0) blurAmount = 0;
+                    els.bgImg.style.filter = `blur(${blurAmount}px)`;
+                    
+                    if (state.progress > 5) {
+                        els.hint.classList.remove('active');
+                    }
+                };
+
+                // 綁定在 scene-area 上
+                els.scene.addEventListener('mousemove', handleMove);
+                els.scene.addEventListener('touchmove', handleMove);
+            }
+        }
+
+        function createTapEffect(e, type) {
+            const effect = document.createElement('div');
+            
+            if (type === 'word') {
+                effect.classList.add('prayer-word');
+                effect.innerText = prayerWords[Math.floor(Math.random() * prayerWords.length)];
+            } else {
+                effect.classList.add('tap-feedback');
+                const texts = ['<i class="fa-solid fa-shoe-prints"></i>', '.', '..', '...'];
+                effect.innerHTML = texts[Math.floor(Math.random() * texts.length)];
+            }
+            
+            const rect = els.scene.getBoundingClientRect();
+            let x, y;
+            
+            if (e.type === 'click' && e.clientX) {
+                x = e.clientX;
+                y = e.clientY;
+            } else {
+                const btnRect = els.btn.getBoundingClientRect();
+                x = btnRect.left + btnRect.width / 2;
+                y = btnRect.top;
+            }
+            
+            effect.style.left = `${x - 20 + (Math.random()*40 - 20)}px`;
+            effect.style.top = `${y - 40}px`;
+            
+            document.body.appendChild(effect);
+            setTimeout(() => effect.remove(), type === 'word' ? 2500 : 800);
+        }
+
+        function handleProgress(amount) {
+            const level = state.currentLevel;
+            state.progress += amount;
+            
+            let percentage = (state.progress / level.maxProgress) * 100;
+            if (percentage > 100) percentage = 100;
+            updateProgress(percentage);
+
+            if (state.progress >= level.maxProgress) {
+                completeLevel();
+            }
+        }
+
+        function updateProgress(percent) {
+            if (state.currentLevel.actionType === 'tap') {
+                els.avatarIcon.style.left = `${percent}%`;
+            } else if (state.currentLevel.actionType === 'wipe') {
+                els.progressBar.style.width = `${percent}%`;
+            }
+        }
+
+        function completeLevel() {
+            const level = state.currentLevel;
+            const newBtn = els.btn.cloneNode(true);
+            els.btn.parentNode.replaceChild(newBtn, els.btn);
+            els.btn = newBtn;
+            
+            els.btn.classList.remove('disabled');
+            els.btn.classList.remove('btn-pulse');
+            
+            if (level.reflection) {
+                els.btn.innerHTML = '<span><i class="fa-solid fa-book-open"></i> 領受省思</span>';
+                
+                els.btn.addEventListener('click', () => {
+                    showReflection(level.reflection);
+                    if (level.reflection.reward) {
+                        addInventory(level.reflection.reward);
+                    }
+                });
+            } else {
+                els.btn.innerHTML = '<span>完成！</span>';
+                els.btn.classList.add('disabled'); 
+                
+                setTimeout(() => {
+                    nextLevel();
+                }, 1000);
+            }
+        }
+
+        function showReflection(data) {
+            els.modalVerse.innerText = data.verse;
+            els.modalText.innerText = data.text;
+            els.modal.classList.add('active');
+            
+            els.nextBtn.onclick = () => {
+                els.modal.classList.remove('active');
+                nextLevel();
+            };
+        }
+
+        function nextLevel() {
+            const level = state.currentLevel;
+            state.currentLevelId = level.nextLevel;
+            localStorage.setItem('paul_level', state.currentLevelId);
+            loadLevel(state.currentLevelId);
+        }
+
+        function addInventory(itemId) {
+            if (!state.inventory.includes(itemId)) {
+                state.inventory.push(itemId);
+                localStorage.setItem('paul_inventory', JSON.stringify(state.inventory));
+                renderInventory();
+                els.badge.style.display = 'block';
+                setTimeout(() => els.badge.style.display = 'none', 3000);
+            }
+        }
+
+        function renderInventory() {
+            els.inventoryList.innerHTML = '';
+            Object.keys(inventoryItems).forEach(key => {
+                const item = inventoryItems[key];
+                const isObtained = state.inventory.includes(key);
+                const el = document.createElement('div');
+                el.className = `inventory-item ${isObtained ? 'obtained' : ''}`;
+                el.innerHTML = `
+                    <i class="fa-solid ${item.icon}"></i>
+                    <span>${item.name}</span>
+                `;
+                els.inventoryList.appendChild(el);
+            });
+        }
+
+        function toggleInventory() {
+            const panel = document.getElementById('inventory-panel');
+            panel.classList.toggle('open');
+        }
+
+        window.addEventListener('load', init);
+
+    </script>
+</body>
+</html>
