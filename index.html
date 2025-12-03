@@ -711,7 +711,9 @@
             currentLevelId: "1-1",
             progress: 0,
             inventory: [],
-            isInteracting: false
+            isInteracting: false,
+            levelCompleted: false, // 防止重複觸發
+            cleanup: null // 用於清理事件監聽器
         };
 
         // DOM 元素快取
@@ -746,6 +748,7 @@
             
             if (savedLevel) state.currentLevelId = savedLevel;
             state.inventory = savedInv;
+            state.levelCompleted = false;
 
             renderInventory();
             loadLevel(state.currentLevelId);
@@ -753,6 +756,13 @@
 
         // 載入關卡
         function loadLevel(levelId) {
+            // 安全性檢查：如果有殘留的 cleanup 函數，先執行
+            if (state.cleanup) {
+                state.cleanup();
+                state.cleanup = null;
+            }
+            state.levelCompleted = false;
+
             if (levelId === "end") {
                 renderEndScreen();
                 return;
@@ -887,6 +897,12 @@
             els.btn.parentNode.replaceChild(newBtn, els.btn);
             els.btn = newBtn;
 
+            // 清除之前的 cleanup (雖然 loadLevel 已經做過，雙重保險)
+            if (state.cleanup) {
+                state.cleanup();
+                state.cleanup = null;
+            }
+
             if (level.actionType === 'tap') {
                 els.avatarTrack.style.display = 'block';
                 els.btn.addEventListener('click', (e) => {
@@ -930,12 +946,16 @@
                 els.btn.innerHTML = `<span><i class="fa-solid fa-hand-sparkles"></i> 滑動畫面擦亮眼睛</span>`;
                 
                 const handleMove = () => {
+                    // 如果關卡已完成，就不再處理滑動事件，防止報錯
+                    if (state.levelCompleted) return;
+
                     handleProgress(0.8); 
                     const blurAmount = 8 - (state.progress / level.maxProgress * 8);
                     
                     // 修正：現在直接控制 img 標籤的 CSS filter
-                    if (blurAmount < 0) blurAmount = 0;
-                    els.bgImg.style.filter = `blur(${blurAmount}px)`;
+                    let finalBlur = blurAmount;
+                    if (finalBlur < 0) finalBlur = 0;
+                    els.bgImg.style.filter = `blur(${finalBlur}px)`;
                     
                     if (state.progress > 5) {
                         els.hint.classList.remove('active');
@@ -945,6 +965,12 @@
                 // 綁定在 scene-area 上
                 els.scene.addEventListener('mousemove', handleMove);
                 els.scene.addEventListener('touchmove', handleMove);
+
+                // 註冊 cleanup 函數以便稍後移除
+                state.cleanup = () => {
+                    els.scene.removeEventListener('mousemove', handleMove);
+                    els.scene.removeEventListener('touchmove', handleMove);
+                };
             }
         }
 
@@ -980,6 +1006,9 @@
         }
 
         function handleProgress(amount) {
+            // 如果已經標記完成，就不再處理進度
+            if (state.levelCompleted) return;
+
             const level = state.currentLevel;
             state.progress += amount;
             
@@ -1001,6 +1030,16 @@
         }
 
         function completeLevel() {
+            // 防止重複進入
+            if (state.levelCompleted) return;
+            state.levelCompleted = true;
+
+            // 執行事件清理
+            if (state.cleanup) {
+                state.cleanup();
+                state.cleanup = null;
+            }
+
             const level = state.currentLevel;
             const newBtn = els.btn.cloneNode(true);
             els.btn.parentNode.replaceChild(newBtn, els.btn);
