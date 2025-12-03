@@ -564,8 +564,8 @@
         <main id="scene-area">
             <!-- 新增：背景容器，包含圖片與漸層 -->
             <div id="scene-background">
-                <!-- 關鍵修改：加入 referrerpolicy="no-referrer" 並移除 onerror，改由 JS 控制 -->
-                <img id="bg-img" src="" alt="scene background" referrerpolicy="no-referrer">
+                <!-- 修改：移除 onerror，交由 JS 控制，確保更穩定的載入行為 -->
+                <img id="bg-img" src="" alt="scene background">
                 <div id="bg-gradient"></div>
             </div>
 
@@ -638,8 +638,8 @@
                 id: "1-1",
                 title: "熱心的掃羅",
                 background: "linear-gradient(to bottom, #87CEEB, #E0F7FA)", 
-                // 更換為：維基百科的公共領域圖片，較穩定 (Judaean Desert)
-                bgImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Wadi_Qelt_08.jpg/800px-Wadi_Qelt_08.jpg",
+                // Pexels 圖片：曠野路
+                bgImage: "https://images.pexels.com/photos/21014/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
                 text: "你是掃羅，一個年輕且熱心的法利賽人。你深信這些「基督徒」正在破壞猶太教的傳統。你拿著大祭司的文書，正準備前往大馬士革捉拿他們。",
                 actionType: "tap", 
                 actionText: "點擊趕路",
@@ -651,8 +651,8 @@
                 id: "2-1",
                 title: "大光的衝擊",
                 background: "linear-gradient(to bottom, #2C3E50, #000000)", 
-                // 更換為：維基百科的公共領域圖片 (Sun rays over ocean) - 雖然是海，但光線效果好且穩定
-                bgImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Sun_rays_over_the_ocean.jpg/800px-Sun_rays_over_the_ocean.jpg",
+                // Pexels 圖片：強烈光芒
+                bgImage: "https://images.pexels.com/photos/1102915/pexels-photo-1102915.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
                 text: "正當你快到大馬士革時，突然，天上發光，四面照著你！你看不見任何東西，只聽見聲音...",
                 actionType: "flash_tap", 
                 actionText: "誰在說話？",
@@ -682,8 +682,8 @@
                 id: "2-3",
                 title: "鱗片掉落",
                 background: "linear-gradient(to bottom, #555, #999)", 
-                // 更換為：維基百科的公共領域圖片 (Interior of convent - stone room with light)
-                bgImage: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Interior_convent_Santa_Catalina_Arequipa_Peru_03.jpg/800px-Interior_convent_Santa_Catalina_Arequipa_Peru_03.jpg",
+                // Pexels 圖片：古代石頭建築內
+                bgImage: "https://images.pexels.com/photos/7031406/pexels-photo-7031406.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
                 text: "亞拿尼亞順服神的呼召來為你按手。你需要清理眼中的帕子，重新看見。",
                 actionType: "wipe", 
                 actionText: "擦拭螢幕恢復視力",
@@ -784,15 +784,18 @@
                 // 重置狀態：先隱藏，等載入完再顯示
                 els.bgImg.style.opacity = '0';
                 els.bgImg.style.display = 'block';
-                els.bgImg.src = level.bgImage;
                 
-                // 圖片載入時淡入
-                els.bgImg.onload = () => { els.bgImg.style.opacity = '1'; };
-                // 載入失敗則隱藏 (使用 JS 事件監聽)
+                // 修正 Race Condition：先掛上監聽器，再賦予 src
+                els.bgImg.onload = () => { 
+                    els.bgImg.style.opacity = '1'; 
+                };
                 els.bgImg.onerror = () => { 
                     console.log('Image failed to load:', level.bgImage);
                     els.bgImg.style.display = 'none'; 
-                }; 
+                };
+                
+                // 最後才設定 src
+                els.bgImg.src = level.bgImage;
             } else {
                 // 如果沒有圖片設定 (例如 2-2 黑暗關卡)
                 els.bgImg.style.display = 'none';
