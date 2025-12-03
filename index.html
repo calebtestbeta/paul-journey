@@ -23,6 +23,8 @@
             box-sizing: border-box;
             user-select: none; /* 禁止選取文字，增加 App 感 */
             -webkit-tap-highlight-color: transparent;
+            /* 新增：禁止 iOS 長按跳出選單/放大鏡 */
+            -webkit-touch-callout: none;
         }
 
         body {
@@ -34,6 +36,10 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
+            /* 新增：禁止雙擊放大，只允許單指操作 */
+            touch-action: manipulation;
+            /* 新增：防止下拉重整或橡皮筋效果 */
+            overscroll-behavior: none;
         }
 
         /* 模擬手機容器 */
@@ -114,6 +120,9 @@
             padding: 20px 20px 40px 20px; 
             overflow-y: auto; 
             overflow-x: hidden;
+            
+            /* 新增：在場景中禁用雙指縮放等預設行為，但允許捲動 (除非在特定關卡被JS覆蓋) */
+            touch-action: pan-y; 
         }
 
         /* 新增：背景容器，包含圖片與漸層 */
@@ -212,6 +221,9 @@
             margin-top: auto; 
             width: 90%; 
             max-width: 350px;
+            
+            /* 新增：確保按鈕不會觸發雙擊縮放，優化點擊反應 */
+            touch-action: manipulation;
         }
 
         .action-btn:active {
@@ -565,7 +577,7 @@
             <!-- 新增：背景容器，包含圖片與漸層 -->
             <div id="scene-background">
                 <!-- 修改：移除 onerror，交由 JS 控制，確保更穩定的載入行為 -->
-                <img id="bg-img" src="" alt="scene background">
+                <img id="bg-img" src="" alt="scene background" referrerpolicy="no-referrer">
                 <div id="bg-gradient"></div>
             </div>
 
@@ -945,9 +957,14 @@
 
                 els.btn.innerHTML = `<span><i class="fa-solid fa-hand-sparkles"></i> 滑動畫面擦亮眼睛</span>`;
                 
-                const handleMove = () => {
+                const handleMove = (e) => {
                     // 如果關卡已完成，就不再處理滑動事件，防止報錯
                     if (state.levelCompleted) return;
+
+                    // 新增：在擦拭時防止畫面滾動
+                    if (e.type === 'touchmove') {
+                        e.preventDefault();
+                    }
 
                     handleProgress(0.8); 
                     const blurAmount = 8 - (state.progress / level.maxProgress * 8);
@@ -964,7 +981,8 @@
 
                 // 綁定在 scene-area 上
                 els.scene.addEventListener('mousemove', handleMove);
-                els.scene.addEventListener('touchmove', handleMove);
+                // 修改：加入 { passive: false } 以允許 preventDefault
+                els.scene.addEventListener('touchmove', handleMove, { passive: false });
 
                 // 註冊 cleanup 函數以便稍後移除
                 state.cleanup = () => {
