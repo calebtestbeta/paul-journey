@@ -23,7 +23,6 @@
             box-sizing: border-box;
             user-select: none; /* 禁止選取文字，增加 App 感 */
             -webkit-tap-highlight-color: transparent;
-            /* 新增：禁止 iOS 長按跳出選單/放大鏡 */
             -webkit-touch-callout: none;
         }
 
@@ -36,9 +35,7 @@
             justify-content: center;
             height: 100vh;
             overflow: hidden;
-            /* 新增：禁止雙擊放大，只允許單指操作 */
             touch-action: manipulation;
-            /* 新增：防止下拉重整或橡皮筋效果 */
             overscroll-behavior: none;
         }
 
@@ -110,19 +107,14 @@
         #scene-area {
             flex: 1;
             position: relative;
-            
             display: flex;
             flex-direction: column;
             justify-content: flex-start; 
             align-items: center;
-            
             text-align: center;
             padding: 20px 20px 40px 20px; 
             overflow-y: auto; 
             overflow-x: hidden;
-            
-            /* 新增：在場景中禁用雙指縮放等預設行為，但允許捲動 (除非在特定關卡被JS覆蓋) */
-            touch-action: pan-y; 
         }
 
         /* 新增：背景容器，包含圖片與漸層 */
@@ -146,8 +138,6 @@
             left: 0;
             opacity: 0; /* 預設隱藏，載入後顯示 */
             transition: opacity 0.5s ease, filter 0.1s linear;
-            
-            /* 預設稍微放大，解決模糊白邊問題 */
             transform: scale(1.1); 
         }
 
@@ -217,12 +207,9 @@
             gap: 10px;
             position: relative;
             overflow: hidden;
-            
             margin-top: auto; 
             width: 90%; 
             max-width: 350px;
-            
-            /* 新增：確保按鈕不會觸發雙擊縮放，優化點擊反應 */
             touch-action: manipulation;
         }
 
@@ -292,7 +279,14 @@
             color: var(--dark-bg);
             transition: left 0.3s ease-out;
             transform: translateX(-50%);
-            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            
+            /* 修改：新增白色描邊效果 (透過多重陰影模擬) */
+            text-shadow: 
+                -1px -1px 0 #fff,  
+                 1px -1px 0 #fff,
+                -1px  1px 0 #fff,
+                 1px  1px 0 #fff,
+                 0px  2px 4px rgba(0,0,0,0.4); /* 保留一點投影增加立體感 */
         }
 
         .avatar-icon.walking {
@@ -335,11 +329,11 @@
             opacity: 0;
             transition: width 0.5s ease-out, height 0.5s ease-out, opacity 0.5s;
             pointer-events: none;
-            z-index: 2; /* 在背景之上，文字之下 */
+            z-index: 2; 
             box-shadow: 0 0 30px 10px rgba(255, 255, 255, 0.1);
         }
 
-        /* 滑動互動提示 (Hand Hint) - 確保層級夠高 */
+        /* 滑動互動提示 (Hand Hint) */
         .hand-hint {
             position: absolute;
             top: 50%;
@@ -348,7 +342,7 @@
             font-size: 4rem;
             color: rgba(255, 255, 255, 0.9);
             pointer-events: none; 
-            z-index: 50; /* 最高層級 */
+            z-index: 50; 
             display: none; 
             text-shadow: 0 0 15px rgba(0,0,0,0.8);
         }
@@ -650,9 +644,9 @@
                 id: "1-1",
                 title: "熱心的掃羅",
                 background: "linear-gradient(to bottom, #87CEEB, #E0F7FA)", 
-                // Pexels 圖片：曠野路
-                bgImage: "https://images.pexels.com/photos/21014/pexels-photo.jpg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-                text: "你是掃羅，一個年輕且熱心的法利賽人。你深信這些「基督徒」正在破壞猶太教的傳統。你拿著大祭司的文書，正準備前往大馬士革捉拿他們。",
+                // 更新圖片為指定的 NEOM 沙漠圖 (直接連結)
+                bgImage: "https://images.unsplash.com/photo-1764697759141-2b5ca080e4e9?q=80&w=1080",
+                text: "你是掃羅，一個年輕且熱心的法利賽人。你深信這些「基督徒」正在褻瀆神、破壞律法。為了捍衛上帝的榮耀，你滿懷義憤，拿著大祭司的文書，正準備前往大馬士革捉拿他們。",
                 actionType: "tap", 
                 actionText: "點擊趕路",
                 maxProgress: 15, 
@@ -663,16 +657,16 @@
                 id: "2-1",
                 title: "大光的衝擊",
                 background: "linear-gradient(to bottom, #2C3E50, #000000)", 
-                // Pexels 圖片：強烈光芒
-                bgImage: "https://images.pexels.com/photos/1102915/pexels-photo-1102915.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+                // 更新圖片：使用您指定的戲劇性光束圖 (參數已優化)
+                bgImage: "https://images.unsplash.com/photo-1536259199821-24af7564fe9b?q=80&w=1080",
                 text: "正當你快到大馬士革時，突然，天上發光，四面照著你！你看不見任何東西，只聽見聲音...",
                 actionType: "flash_tap", 
-                actionText: "誰在說話？",
+                actionText: "主啊！你是誰？", 
                 maxProgress: 1, 
                 bibleRef: { text: "使徒行傳 9:3", book: 44, chap: 9, v: 3 },
                 reflection: {
                     verse: "「掃羅！掃羅！你為什麼逼迫我？」",
-                    text: "有時候，神必須用激烈的方式打斷我們的人生計畫，才能讓我們聽見祂的聲音。",
+                    text: "有時候，神必須用激烈的方式打斷我們的人生計畫，才能讓我們聽見祂的聲音。大光使肉眼失明，卻是靈眼張開的開始。", 
                     reward: "light_fragment"
                 },
                 nextLevel: "2-2"
@@ -681,9 +675,9 @@
                 id: "2-2",
                 title: "黑暗中的等待",
                 background: "#000000", 
-                // 全黑不需要圖片
-                bgImage: null,
-                text: "你的眼睛瞎了，三天不能看見，也不吃也不喝。你在黑暗中獨自面對內心的震盪。",
+                // 更新圖片：使用指定的深色洞穴質感圖 (參數調整為適合手機的寬度)
+                bgImage: "https://images.unsplash.com/photo-1695453932796-937f0a7fb129?q=80&w=1080",
+                text: "你的眼睛瞎了，三天不能看見，也不吃也不喝。在全然的黑暗中，你過去的驕傲被破碎，只能獨自面對神。", 
                 actionType: "pray", 
                 actionText: "在黑暗中禱告...",
                 maxProgress: 15, 
@@ -694,17 +688,17 @@
                 id: "2-3",
                 title: "鱗片掉落",
                 background: "linear-gradient(to bottom, #555, #999)", 
-                // Pexels 圖片：古代石頭建築內
-                bgImage: "https://images.pexels.com/photos/7031406/pexels-photo-7031406.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-                text: "亞拿尼亞順服神的呼召來為你按手。你需要清理眼中的帕子，重新看見。",
+                // 更新圖片：使用您指定的窗光圖 (參數已優化)
+                bgImage: "https://images.unsplash.com/photo-1579727633636-491dcae7cfd5?q=80&w=1080",
+                text: "亞拿尼亞順服神的呼召來為你按手。你需要清理眼中的帕子，重新看見。", 
                 actionType: "wipe", 
-                actionText: "擦拭螢幕恢復視力",
+                actionText: "滑動領受醫治", 
                 maxProgress: 100,
                 bibleRef: { text: "使徒行傳 9:18", book: 44, chap: 9, v: 18 },
                 reflection: {
                     verse: "「立即有鱗片從他眼睛上掉下來，他就能看見。」",
-                    text: "真實的看見，往往發生在我們願意放下偏見（鱗片）之後。",
-                    reward: "scroll_acts"
+                    text: "真實的看見，是聖靈充滿的結果。鱗片掉落，不只是視力恢復，更是看見了耶穌就是基督。", 
+                    reward: "new_vision" 
                 },
                 nextLevel: "end" 
             }
@@ -712,11 +706,11 @@
 
         const inventoryItems = {
             "light_fragment": { name: "大光碎片", icon: "fa-sun" },
-            "scroll_acts": { name: "使徒證書", icon: "fa-scroll" },
+            "new_vision": { name: "新的眼光", icon: "fa-eye" }, // 修改：新的眼光
             "letter_romans": { name: "羅馬書", icon: "fa-envelope" }
         };
 
-        const prayerWords = ["主啊", "我是誰", "為什麼", "憐憫", "光", "悔改", "禱告", "靜默", "赦免"];
+        const prayerWords = ["主啊", "我是誰", "為什麼", "憐憫", "光", "悔改", "我當做什麼", "靜默", "赦免"]; 
 
         /* --- 2. 遊戲引擎 (Game Engine) --- */
         let state = {
@@ -724,15 +718,15 @@
             progress: 0,
             inventory: [],
             isInteracting: false,
-            levelCompleted: false, // 防止重複觸發
-            cleanup: null // 用於清理事件監聽器
+            levelCompleted: false, 
+            cleanup: null 
         };
 
         // DOM 元素快取
         const els = {
             scene: document.getElementById('scene-area'),
-            bgContainer: document.getElementById('scene-background'), // 背景容器
-            bgImg: document.getElementById('bg-img'), // 背景圖片標籤
+            bgContainer: document.getElementById('scene-background'), 
+            bgImg: document.getElementById('bg-img'), 
             overlay: document.getElementById('scene-overlay'),
             text: document.getElementById('story-text'),
             storyBox: document.getElementById('story-box'),
@@ -847,7 +841,14 @@
             els.storyBox.style.animation = 'fadeUp 0.8s forwards';
             
             els.text.innerHTML = level.text;
-            els.btn.innerHTML = `<span>${level.actionText}</span>`;
+            
+            // 檢查按鈕是否有 HTML (icon)
+            if (level.actionText.includes('<i')) {
+                els.btn.innerHTML = `<span>${level.actionText}</span>`;
+            } else {
+                els.btn.innerHTML = `<span>${level.actionText}</span>`;
+            }
+            
             els.btn.classList.remove('disabled');
             els.btn.classList.remove('btn-pulse'); 
 
@@ -955,7 +956,8 @@
                 els.progressContainer.style.display = 'block';
                 els.hint.classList.add('active'); 
 
-                els.btn.innerHTML = `<span><i class="fa-solid fa-hand-sparkles"></i> 滑動畫面擦亮眼睛</span>`;
+                // 2-3 關卡特殊按鈕文字 (包含 icon)
+                els.btn.innerHTML = `<span><i class="fa-solid fa-hand-sparkles"></i> ${level.actionText.replace('<i class="fa-solid fa-hand-sparkles"></i> ', '')}</span>`;
                 
                 const handleMove = (e) => {
                     // 如果關卡已完成，就不再處理滑動事件，防止報錯
@@ -997,7 +999,9 @@
             
             if (type === 'word') {
                 effect.classList.add('prayer-word');
-                effect.innerText = prayerWords[Math.floor(Math.random() * prayerWords.length)];
+                // 確保隨機選詞不會出錯
+                const word = prayerWords[Math.floor(Math.random() * prayerWords.length)];
+                effect.innerText = word;
             } else {
                 effect.classList.add('tap-feedback');
                 const texts = ['<i class="fa-solid fa-shoe-prints"></i>', '.', '..', '...'];
