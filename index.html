@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>保羅的旅程 | Paul's Journey</title>
     <!-- 引入字體與圖示 -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;700&display=swap" rel="stylesheet">
@@ -33,7 +33,9 @@
             background-color: #222;
             display: flex;
             justify-content: center;
+            /* 修改：使用 dvh (Dynamic Viewport Height) 解決手機網址列遮擋問題 */
             height: 100vh;
+            height: 100dvh; 
             overflow: hidden;
             touch-action: manipulation;
             overscroll-behavior: none;
@@ -55,6 +57,8 @@
         /* --- UI 元件 (UI Components) --- */
         .header {
             padding: 15px;
+            /* 增加頂部安全區域，避免瀏海遮擋 */
+            padding-top: calc(15px + env(safe-area-inset-top));
             background: var(--accent-color);
             color: white;
             display: flex;
@@ -112,7 +116,8 @@
             justify-content: flex-start; 
             align-items: center;
             text-align: center;
-            padding: 20px 20px 40px 20px; 
+            /* 修改：增加底部 padding 並加上安全區域，防止按鈕被 Home Bar 遮擋 */
+            padding: 20px 20px calc(40px + env(safe-area-inset-bottom)) 20px;
             overflow-y: auto; 
             overflow-x: hidden;
         }
@@ -211,6 +216,9 @@
             width: 90%; 
             max-width: 350px;
             touch-action: manipulation;
+            /* 確保按鈕本身不會被選取 */
+            -webkit-user-select: none;
+            user-select: none;
         }
 
         .action-btn:active {
@@ -657,8 +665,8 @@
                 id: "2-1",
                 title: "大光的衝擊",
                 background: "linear-gradient(to bottom, #2C3E50, #000000)", 
-                // 更新圖片：使用您指定的戲劇性光束圖 (參數已優化)
-                bgImage: "https://images.unsplash.com/photo-1536259199821-24af7564fe9b?q=80&w=1080",
+                // Unsplash 圖片：強烈光芒
+                bgImage: "https://images.unsplash.com/photo-1507413245164-6160d8298b31?q=80&w=1080",
                 text: "正當你快到大馬士革時，突然，天上發光，四面照著你！你看不見任何東西，只聽見聲音...",
                 actionType: "flash_tap", 
                 actionText: "主啊！你是誰？", 
@@ -675,8 +683,8 @@
                 id: "2-2",
                 title: "黑暗中的等待",
                 background: "#000000", 
-                // 更新圖片：使用指定的深色洞穴質感圖 (參數調整為適合手機的寬度)
-                bgImage: "https://images.unsplash.com/photo-1695453932796-937f0a7fb129?q=80&w=1080",
+                // Unsplash 圖片：深色石室質感
+                bgImage: "https://images.unsplash.com/photo-1533645367332-9cb4d989cb39?q=80&w=1080",
                 text: "你的眼睛瞎了，三天不能看見，也不吃也不喝。在全然的黑暗中，你過去的驕傲被破碎，只能獨自面對神。", 
                 actionType: "pray", 
                 actionText: "在黑暗中禱告...",
@@ -688,8 +696,8 @@
                 id: "2-3",
                 title: "鱗片掉落",
                 background: "linear-gradient(to bottom, #555, #999)", 
-                // 更新圖片：使用您指定的窗光圖 (參數已優化)
-                bgImage: "https://images.unsplash.com/photo-1579727633636-491dcae7cfd5?q=80&w=1080",
+                // Unsplash 圖片：窗光射入
+                bgImage: "https://images.unsplash.com/photo-1518331495906-ad7b70e27a7f?q=80&w=1080",
                 text: "亞拿尼亞順服神的呼召來為你按手。你需要清理眼中的帕子，重新看見。", 
                 actionType: "wipe", 
                 actionText: "滑動領受醫治", 
